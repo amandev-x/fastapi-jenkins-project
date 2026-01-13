@@ -33,6 +33,16 @@ pipeline {
             }
         }
 
+        stage("Lint") {
+            steps {
+                echo "Linting Code"
+                sh '''
+                  . .venv/bin/activate
+                  pylint /app
+                  '''
+            }
+        }
+
         stage("Testing Code") {
             steps {
                 sh '''
