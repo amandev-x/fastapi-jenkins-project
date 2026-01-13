@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sh '''
                    python3 -m venv .venv
-                   source .venv/bin/activate
+                   . .venv/bin/activate
                    pip3 install -r requirements.txt
                    '''
             }
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 sh '''
                    echo "Testing code using pytest"
-                   source .venv/bin/activate
+                   . .venv/bin/activate
                    pytest -v
                    '''
             }
