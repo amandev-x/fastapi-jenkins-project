@@ -38,7 +38,7 @@ pipeline {
                 echo "Linting Code"
                 sh '''
                   . .venv/bin/activate
-                  pylint /app || true
+                  pylint app/ || true
                   '''
             }
         }
