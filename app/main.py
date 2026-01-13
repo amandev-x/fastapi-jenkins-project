@@ -1,6 +1,6 @@
+from typing import List
 from fastapi import FastAPI, HTTPException, status
-from .models import Todo, HealthCheckResponse
-from typing import List 
+from .models import Todo, HealthCheckResponse 
 
 app = FastAPI(
     title="FastAPI Jenkins Project"
@@ -20,33 +20,33 @@ async def healthcheck():
 
 @app.get("/todos", response_model=List[Todo])
 async def get_todos():
-   return todos 
+    return todos 
 
 @app.post("/todos", response_model=Todo)
 async def create_todo(todo: Todo):
-   global todo_id_counter
-   todo.id = todo_id_counter
-   todo_id_counter += 1
-   todos.append(todo)
-   return todo
+    global todo_id_counter
+    todo.id = todo_id_counter
+    todo_id_counter += 1
+    todos.append(todo)
+    return todo
 
 @app.get("/todos/{todo_id}", response_model=Todo)
 async def get_todo(todo_id: int):
-   for todo in todos:
-     if todo.id == todo_id:
-        return todo 
-   raise HTTPException(
-     status_code=status.HTTP_404_NOT_FOUND,
-     detail="Todo with the given ID {todo_id} not found"
-   )
+    for todo in todos:
+       if todo.id == todo_id:
+          return todo 
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo with the given ID {todo_id} not found"
+        )
 
 @app.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todo(todo_id: int):
-   for index, todo in enumerate(todos):
-      if todo.id == todo_id:
+    for index, todo in enumerate(todos):
+        if todo.id == todo_id:
          todos.pop(index)
          return {"Message": "Todo deleted successfully"}
-   raise HTTPException(
-     status_code=status.HTTP_404_NOT_FOUND,
-     detail="Todo with the given ID {todo_id} not found"
-    )
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo with the given ID {todo_id} not found"
+        )
