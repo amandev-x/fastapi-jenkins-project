@@ -33,6 +33,12 @@ pipeline {
             }
         }
 
+        stage("Counting lines of code") {
+            steps {
+                sh 'find app/ -name "*.py" | xargs wc -l'
+            }
+        }
+
         stage("Lint") {
             steps {
                 echo "Linting Code"
