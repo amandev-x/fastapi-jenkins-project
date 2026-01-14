@@ -20,3 +20,8 @@ class HealthCheckResponse(BaseModel):
     """Response model for health check endpoint."""
 
     status: str
+
+class JenkinsResponse(BaseModel):
+    """ Response model for jenkins"""
+
+    status: str
