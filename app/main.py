@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import FastAPI, HTTPException, status
-from .models import Todo, HealthCheckResponse 
+from .models import Todo, HealthCheckResponse, JenkinsResponse
 
 app = FastAPI(
     title="FastAPI Jenkins Project"
@@ -17,6 +17,10 @@ async def root():
 @app.get("/health", response_model=HealthCheckResponse)
 async def healthcheck():
     return {"status": "OK"}
+
+@app.get("/jenkins", response_model=JenkinsResponse)
+async def get():
+    return {"status": "Running in Jenkins"}
 
 @app.get("/todos", response_model=List[Todo])
 async def get_todos():
