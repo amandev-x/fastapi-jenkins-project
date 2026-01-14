@@ -67,10 +67,10 @@ pipeline {
     }
 
     post {
-        always {
-            echo "Cleaning up"
-            sh 'rm -rf .venv'
-        }
+        // always {
+        //     echo "Cleaning up"
+        //     sh 'rm -rf .venv'
+        // }
 
         success {
             echo "🎉 Build succeeded!"
