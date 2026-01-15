@@ -80,7 +80,7 @@ def test_delete_todo():
 
    # Delete it
    delete_response = client.delete(f"/todos/{todo_id}")
-   assert delete_response.status_code == 200
+   assert delete_response.status_code == 204
 
    # Verify deletion
    get_response = client.get(f"/todos/{todo_id}")
