@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     version: str = "1.0.0"
     debug: bool = False
 
-    class Config:
+    class ConfigDict:
         env_file = ".env"
 
 
