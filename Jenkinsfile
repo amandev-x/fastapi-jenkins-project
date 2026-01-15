@@ -66,6 +66,25 @@ pipeline {
             }
         }
 
+        stage("Security Scan with Bandit") {
+            steps {
+                echo "Running security scan with Bandit..."
+                sh '''
+                    . ${VENV_DIR}/bin/activate
+                    bandit -r app/ --level medium --format html -o bandit-report.html --exit-zero || true
+                '''
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: ".",
+                    reportFiles: "bandit-report.html",
+                    reportName: "Bandit Security Report"
+                ])
+                echo "Security scan complete."
+            }
+        }
+
         stage("Code Quality and Test") {
             parallel {
                 stage("Linting") {
