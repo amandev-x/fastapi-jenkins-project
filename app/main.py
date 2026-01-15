@@ -15,9 +15,11 @@ todo_id_counter = 1
 
 @app.get("/")
 async def root():
-    return {f"Message": "Welcome to {settings.app_name}",
-            "version": {settings.version},
-            "docs": "/docs"}
+    return {
+         "Message": settings.app_name,
+         "version": settings.version,
+         "docs": "/docs"
+         }
 
 @app.get("/health", response_model=HealthCheckResponse)
 async def healthcheck():
