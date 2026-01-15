@@ -60,7 +60,7 @@ pipeline {
                         sh '''
                           . ${VENV_DIR}/bin/activate
                           echo "Running flake8..."
-                          flake8 --max-length-line 100 app/ --exit-zero || true
+                          flake8 --max-line-length 100 app/ --exit-zero || true
 
                           echo "Running Black..."
                           black --check app/ tests/ || true
