@@ -95,7 +95,7 @@ def test_stats():
    response = client.get("/stats")
    assert response.status_code == 200
    data = response.json()
-   assert data["total"] == 3
+   assert data["total_todos"] == 3
    assert data["completed"] == 2
    assert data["pending"] == 1
    clear_todos()
