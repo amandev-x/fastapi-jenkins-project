@@ -96,8 +96,8 @@ def test_stats():
    assert response.status_code == 200
    data = response.json()
    assert data["total_todos"] == 3
-   assert data["completed"] == 2
-   assert data["pending"] == 1
+   assert data["completed_todos"] == 2
+   assert data["pending_todos"] == 1
    clear_todos()
    
 
