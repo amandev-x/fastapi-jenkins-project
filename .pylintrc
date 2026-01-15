@@ -1,0 +1,7 @@
+[MASTER]
+disable=
+    C0111, # Ignores missing docstring
+    C0103, # Invalid name 
+    R0903, # Too few public methods
+    
+max-line-length=100 # Set maximum line length to 100 characters
