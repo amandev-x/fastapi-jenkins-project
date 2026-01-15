@@ -119,10 +119,33 @@ pipeline {
 
         success {
             echo "🎉 Pipeline build successfull. All Tests case passed."
+            emailext(
+                subject: "Success Job '${env.JOB_NAME}' [${env.BUILD_NUMBER}]'",
+                body: """
+                  <p> Good News! The job was build successfully! </p>
+                  <p><b>Job:</b> ${env.JOB_NAME} </p>
+                  <p><b>Build number:</b> ${env.BUILD_NUMBER} </p>
+                  <p><b>Build URL:</b> </a href="${env.BUILD_NUMBER}">${env.BUILD_URL}</a></p>
+                """,
+                to "dabralaman0@gmail.com",
+                mimeType: "text/html"
+            )
         }
 
         failure {
             echo '❌ Build failed! Please check the logs and fix the issues.'
+            emailext(
+                subject: "Failure Job ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+                body: """
+                  <p> Unfortuanately build failed </p>
+                  <p><b>Job:</b> ${env.JOB_NAME}</p>
+                  <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                  <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                  <p>Please check the console output for details.</p>
+                  """,
+                  to: "dabralaman0@gmail.com",
+                  mimeType: "text/html"
+            )
         }
 
         unstable {
