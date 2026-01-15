@@ -35,11 +35,6 @@ pipeline {
 
                    echo "Installed packages"
                    pip3 list
-
-                   echo "Current Directory"
-                   pwd 
-                   echo "List files"
-                   ls -la
                    '''
                 echo "Environment setup complete..."
             }
@@ -65,7 +60,7 @@ pipeline {
                           echo "Running Black..."
                           black --check app/ tests/ || true
                           '''
-                        eccho "Linting complete."
+                        echo "Linting complete."
                     }
                 }
 
