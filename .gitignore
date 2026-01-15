@@ -3,8 +3,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 .env
-# .coverage
-# htmlcov/
+.coverage
+htmlcov/
 dist/
 build/
 .pytest_cache/
