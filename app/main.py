@@ -24,7 +24,7 @@ async def root():
 @app.get("/health", response_model=HealthCheckResponse)
 async def healthcheck():
     return {"status": "healthy",
-            "total_todos": len(todos)}
+            }
 
 @app.get("/jenkins", response_model=JenkinsResponse)
 async def get():
