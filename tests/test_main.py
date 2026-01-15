@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app, todos
+from app.config import settings
 
 # Create a test client
 client = TestClient(app)
@@ -104,7 +105,9 @@ def test_stats():
 def test_root():
    response = client.get("/")
    assert response.status_code == 200
-   assert response.json()["Message"] == "Welcome to FastAPI Jenkins Project"
+   assert response.json()["Message"] == settings.app_name
+   assert response.json()["version"] == settings.version
+   assert response.json()["docs"] == "/docs"
 
 def test_healthcheck():
    response = client.get("/health")
