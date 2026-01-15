@@ -1,6 +1,26 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(
+            name: "RUN_LINTING",
+            choices: ["yes", "no"],
+            description: "Run linting?"
+        )
+
+        choice(
+            name: "RUN_TESTS",
+            choices: ["yes", "no"],
+            description: "Run unit tests?"
+        )
+
+        string(
+            name: "COVERAGE_THRESHOLD",
+            defaultValue: "80",
+            description: "Minimum code coverage percentage"
+        )
+    }
+
     environment {
         PYTHON_VERSION = "python3"
         VENV_DIR = ".venv"
@@ -49,6 +69,9 @@ pipeline {
         stage("Code Quality and Test") {
             parallel {
                 stage("Linting") {
+                    when {
+                        expression { params.RUN_LINTING == "yes"}
+                        }
                     steps {
                         echo "Running code quality checks..."
 
@@ -65,11 +88,14 @@ pipeline {
                 }
 
                 stage("Unit Testing") {
+                    when {
+                        expression { params.RUN_TESTS }
+                        }
                     steps {
                         echo "Running Unit Tests..."
                         sh '''
                           . ${VENV_DIR}/bin/activate
-                          pytest --junitxml=test-result.xml
+                          pytest --junitxml=test-result.xml --cov-fail-under=${COVERAGE_THRESHOLD}
                           '''
                         echo "Test passed."
                     }
@@ -119,33 +145,33 @@ pipeline {
 
         success {
             echo "🎉 Pipeline build successfull. All Tests case passed."
-            emailext(
-                subject: "Success Job '${env.JOB_NAME}' [${env.BUILD_NUMBER}]'",
-                body: """
-                  <p> Good News! The job was build successfully! </p>
-                  <p><b>Job:</b> ${env.JOB_NAME} </p>
-                  <p><b>Build number:</b> ${env.BUILD_NUMBER} </p>
-                  <p><b>Build URL:</b> </a href="${env.BUILD_NUMBER}">${env.BUILD_URL}</a></p>
-                """,
-                to: "dabralaman0@gmail.com",
-                mimeType: "text/html"
-            )
+            // emailext(
+            //     subject: "Success Job '${env.JOB_NAME}' [${env.BUILD_NUMBER}]'",
+            //     body: """
+            //       <p> Good News! The job was build successfully! </p>
+            //       <p><b>Job:</b> ${env.JOB_NAME} </p>
+            //       <p><b>Build number:</b> ${env.BUILD_NUMBER} </p>
+            //       <p><b>Build URL:</b> </a href="${env.BUILD_NUMBER}">${env.BUILD_URL}</a></p>
+            //     """,
+            //     to: "",
+            //     mimeType: "text/html"
+            // )
         }
 
         failure {
             echo '❌ Build failed! Please check the logs and fix the issues.'
-            emailext(
-                subject: "Failure Job ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-                body: """
-                  <p> Unfortuanately build failed </p>
-                  <p><b>Job:</b> ${env.JOB_NAME}</p>
-                  <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-                  <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                  <p>Please check the console output for details.</p>
-                  """,
-                  to: "dabralaman0@gmail.com",
-                  mimeType: "text/html"
-            )
+            // emailext(
+            //     subject: "Failure Job ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+            //     body: """
+            //       <p> Unfortuanately build failed </p>
+            //       <p><b>Job:</b> ${env.JOB_NAME}</p>
+            //       <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+            //       <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+            //       <p>Please check the console output for details.</p>
+            //       """,
+            //       to: "",
+            //       mimeType: "text/html"
+            // )
         }
 
         unstable {
