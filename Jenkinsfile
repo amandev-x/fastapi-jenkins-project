@@ -101,7 +101,7 @@ pipeline {
                 sh '''
                   echo "====================="
                   echo "Application: ${APP_NAME}"
-                  echo "Build Number: ${BUILD_NUMBER}
+                  echo "Build Number: ${BUILD_NUMBER}"
                   echo "Build Url: ${BUILD_URL}"
                   echo "Git Branch: ${GIT_BRANCH}"
                   echo "Git Commit: ${GIT_COMMIT}"
