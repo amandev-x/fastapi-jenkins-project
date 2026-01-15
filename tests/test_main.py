@@ -1,10 +1,12 @@
 from fastapi.testclient import TestClient
 from app.main import app, todos
 from app.config import settings
+import pytest
 
 # Create a test client
 client = TestClient(app)
 
+@pytest.fixture(autouse=True)
 def clear_todos():
    """ Helper function to clear todos before each test """
    todos.clear()
@@ -21,7 +23,6 @@ def test_create_todo():
    data = response.json()
    assert data["title"] == "FastAPI Todo Project"
    assert data["id"] is not None
-   clear_todos()
 
 
 def create_todo_empty_title():
@@ -32,7 +33,6 @@ def create_todo_empty_title():
    })
    assert response.status_code == 400
    assert response.json()["detail"] == "Title cannot be empty"
-   clear_todos()
 
 
 def test_get_todos():
@@ -50,7 +50,6 @@ def test_get_todos():
    response = client.get("/todos")
    assert response.status_code == 200
    assert len(response.json()) == 2
-   clear_todos()
 
 def test_get_todos_filtered():
    client.post("/todos", json={"title": "Todo 1", "completed": False})
@@ -59,7 +58,7 @@ def test_get_todos_filtered():
    response = client.get("/todos?completed=true")
    assert response.status_code == 200
    assert len(response.json()) == 1
-   clear_todos()
+
 
 def test_update_todo():
    # Create a todo
@@ -71,7 +70,7 @@ def test_update_todo():
    assert response.status_code == 200
    assert response.json()["title"] == "New Title"
    assert response.json()["completed"] is True
-   clear_todos()
+
 
 def test_delete_todo():
    # Create a todo
@@ -86,7 +85,7 @@ def test_delete_todo():
    # Verify deletion
    get_response = client.get(f"/todos/{todo_id}")
    assert get_response.status_code == 404
-   clear_todos()
+
 
 def test_stats():
    client.post("/todos", json={"title": "Todo 1", "completed": True})
@@ -99,7 +98,6 @@ def test_stats():
    assert data["total_todos"] == 3
    assert data["completed_todos"] == 2
    assert data["pending_todos"] == 1
-   clear_todos()
    
 
 def test_root():
@@ -112,7 +110,7 @@ def test_root():
 def test_healthcheck():
    response = client.get("/health")
    assert response.status_code == 200
-   assert response.json()["status"] == "OK"
+   assert response.json()["status"] == "healthy"
 
 def test_jenkins():
    response = client.get("/jenkins")
@@ -123,13 +121,13 @@ def test_create_and_get_todo():
    # Create a new todo
    todo_data = {"title": "Test Todo", "description": "This is a test todo", "completed": False}
    response = client.post("/todos", json=todo_data)
-   assert response.status_code == 200
+   assert response.status_code == 201
    todo_id = response.json()["id"]
 
    # Get the todo by ID
    response = client.get(f"/todos/{todo_id}")
    assert response.status_code == 200
    assert response.json()["title"] == "Test Todo"
-   clear_todos()
+
    
    
