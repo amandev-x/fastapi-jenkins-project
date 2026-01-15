@@ -58,7 +58,7 @@ pipeline {
                         echo "Running code quality checks..."
 
                         sh '''
-                          . {VENV_DIR}/bin/activate
+                          . ${VENV_DIR}/bin/activate
                           echo "Running flake8..."
                           flake8 --max-length-line 100 app/ --exit-zero || true
 
@@ -73,7 +73,7 @@ pipeline {
                     steps {
                         echo "Running Unit Tests..."
                         sh '''
-                          . {VENV_DIR}/bin/activate
+                          . ${VENV_DIR}/bin/activate
                           pytest --junitxml=test-result.xml
                           '''
                         echo "Test passed."
