@@ -204,11 +204,11 @@ pipeline {
             sh 'rm -rf ${VENV_DIR}'
             junit "test-result.xml"
             publishHTML([
-                allowMissing: false
-                alwaysLinkToLastBuild: true
-                keepAll: true
-                reportDir: "htmlcov"
-                reportFiles: "index.html"
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: "htmlcov",
+                reportFiles: "index.html",
                 reportName: "Code Coverage Report"
             ])
         }
