@@ -1,30 +1,33 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(
-            name: "RUN_LINTING",
-            choices: ["yes", "no"],
-            description: "Run linting?"
-        )
+    // parameters {
+    //     choice(
+    //         name: "RUN_LINTING",
+    //         choices: ["yes", "no"],
+    //         description: "Run linting?"
+    //     )
 
-        choice(
-            name: "RUN_TESTS",
-            choices: ["yes", "no"],
-            description: "Run unit tests?"
-        )
+    //     choice(
+    //         name: "RUN_TESTS",
+    //         choices: ["yes", "no"],
+    //         description: "Run unit tests?"
+    //     )
 
-        string(
-            name: "COVERAGE_THRESHOLD",
-            defaultValue: "80",
-            description: "Minimum code coverage percentage"
-        )
-    }
+    //     string(
+    //         name: "COVERAGE_THRESHOLD",
+    //         defaultValue: "80",
+    //         description: "Minimum code coverage percentage"
+    //     )
+    // }
 
     environment {
         PYTHON_VERSION = "python3"
         VENV_DIR = ".venv"
         APP_NAME = "FastAPI Todo API"
+        DOCKER_IMAGE = "amandabral9954/fastapi-todo"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials("dockerhub-credentials")
     }
 
     stages {
@@ -122,21 +125,59 @@ pipeline {
             }
         }
 
-        stage("Test Report") {
+        stage("Build Docker Image") {
             steps {
-                echo "Generating Test Report"
-                junit "test-result.xml"
+                echo "🐳 Building Docker image..."
+                script {
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    docker.build("${DOCKER_IMAGE}:latest")
+                }
+                echo "✅ Docker image build successfully..."
+            }
+        }
 
-                // Archive Coverage Report
-                publishHTML([
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "htmlcov",
-                    reportFiles: "index.html",
-                    reportName: "Code Coverage Report"
-                ])
-                echo "Test Report Generated Successfully"
+        stage("Test Docker Image") {
+            steps {
+                echo "Running docker image..."
+                sh '''
+                  docker run -d --name test-container -p 8001:8000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                  sleep 5
+
+                  # Test health endpoint
+                  curl -f http://localhost:8000/health || exit 1
+
+                  # Stop and remove docker container
+                  docker rm -f test-container
+                '''
+                echo "✅ Docker image test passed..."
+            }
+        }
+
+        stage("Push to Dockerhub") {
+            steps {
+                echo "Pushing to dockerhub"
+                script {
+                    docker.withRegistry("https://index.docker.io/v1", "dockerhub-credentials") {
+                      docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                      docker.image("${DOCKER_IMAGE}:latest").push()
+                    }
+                }
+                echo "✅ Image pushed successfully"
+            }
+        }
+
+        stage("Cleanup Docker") {
+            steps {
+                echo "Cleaning docker images"
+                sh '''
+                  docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true
+                  docker rmi ${DOCKER_IMAGE}:latest || true
+
+                  # Clean up dangling images
+                  docker image prune -f
+                '''
+                echo "✅ Docker cleanup successfully"
             }
         }
 
@@ -148,6 +189,7 @@ pipeline {
                   echo "Application: ${APP_NAME}"
                   echo "Build Number: ${BUILD_NUMBER}"
                   echo "Build Url: ${BUILD_URL}"
+                  echo "Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                   echo "Git Branch: ${GIT_BRANCH}"
                   echo "Git Commit: ${GIT_COMMIT}"
                   echo "====================="
@@ -160,6 +202,15 @@ pipeline {
         always {
             echo "Cleaning up"
             sh 'rm -rf ${VENV_DIR}'
+            junit "test-result.xml"
+            publishHTML([
+                allowMissing: false
+                allowLinkToLastBuild: true
+                keepAll: true
+                reportDir: "htmlcov"
+                reportFiles: "index.html"
+                reportName: "Code Coverage Report"
+            ])
         }
 
         success {
