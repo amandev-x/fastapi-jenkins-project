@@ -205,7 +205,7 @@ pipeline {
             junit "test-result.xml"
             publishHTML([
                 allowMissing: false
-                allowLinkToLastBuild: true
+                alwaysLinkToLastBuild: true
                 keepAll: true
                 reportDir: "htmlcov"
                 reportFiles: "index.html"
