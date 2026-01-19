@@ -46,6 +46,9 @@ pipeline {
                    echo "Python Version"
                    ${PYTHON_VERSION} --version
 
+                   echo "Installing Python ensurepip..."
+                   sudo apt install -y python3.12-venv
+
                    echo "Creating virtual environment..."
                    ${PYTHON_VERSION} -m venv ${VENV_DIR}
 
