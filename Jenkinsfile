@@ -158,7 +158,7 @@ pipeline {
             steps {
                 echo "Pushing to dockerhub"
                 script {
-                    docker.withRegistry("https://index.docker.io/v1", "dockerhub-credentials") {
+                    docker.withRegistry("https://registry.hub.docker.com", "dockerhub-credentials") {
                       docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
                       docker.image("${DOCKER_IMAGE}:latest").push()
                     }
