@@ -91,9 +91,9 @@ pipeline {
         stage("Code Quality and Test") {
             parallel {
                 stage("Linting") {
-                    when {
-                        expression { params.RUN_LINTING == "yes"}
-                        }
+                    // when {
+                    //     expression { params.RUN_LINTING == "yes"}
+                    //     }
                     steps {
                         echo "Running code quality checks..."
 
@@ -110,9 +110,9 @@ pipeline {
                 }
 
                 stage("Unit Testing") {
-                    when {
-                        expression { params.RUN_TESTS }
-                        }
+                    // when {
+                    //     expression { params.RUN_TESTS }
+                    //     }
                     steps {
                         echo "Running Unit Tests..."
                         sh '''
