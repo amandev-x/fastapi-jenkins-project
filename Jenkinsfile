@@ -248,3 +248,4 @@ pipeline {
             echo "Pipeline is unstable. Some tests case have benn failed."
         }
     }
+}
