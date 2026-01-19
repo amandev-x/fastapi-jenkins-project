@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-        node {
-            label "jenkins-worker-agent"
-        }
-    }
+    agent any
 
     // parameters {
     //     choice(
