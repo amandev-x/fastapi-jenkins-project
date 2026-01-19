@@ -14,12 +14,12 @@ pipeline {
     //         description: "Run unit tests?"
     //     )
 
-    //     string(
-    //         name: "COVERAGE_THRESHOLD",
-    //         defaultValue: "80",
-    //         description: "Minimum code coverage percentage"
-    //     )
-    // }
+        string(
+            name: "COVERAGE_THRESHOLD",
+            defaultValue: "80",
+            description: "Minimum code coverage percentage"
+        )
+    }
 
     environment {
         PYTHON_VERSION = "python3"
@@ -145,7 +145,7 @@ pipeline {
                   sleep 5
 
                   # Test health endpoint
-                  curl -f http://localhost:8000/health || exit 1
+                  curl -f http://localhost:8001/health || exit 1
 
                   # Stop and remove docker container
                   docker rm -f test-container
