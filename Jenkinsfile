@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    // parameters {
+    parameters {
     //     choice(
     //         name: "RUN_LINTING",
     //         choices: ["yes", "no"],
