@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label "build-agent" }
 
     parameters {
     //     choice(
@@ -55,9 +55,6 @@ pipeline {
                    echo "Installing dependencies..."
                    pip3 install -r requirements.txt
                    pip3 install -r requirements-dev.txt
-
-                   echo "Installed packages"
-                   pip3 list
                    '''
                 echo "Environment setup complete..."
             }
