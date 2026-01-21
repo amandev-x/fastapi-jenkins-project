@@ -1,5 +1,6 @@
 pipeline {
-    agent { label "build-agent" }
+    // agent { label "build-agent" }
+    agent any
 
     parameters {
     //     choice(
@@ -28,6 +29,11 @@ pipeline {
         DOCKER_IMAGE = "amandabral9954/fastapi-todo"
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials("dockerhub-credentials")
+
+        // Deployment Settings
+        DEPLOYMENT_HOST = "localhost"
+        DEPLOYMENT_USER = "ubuntu"
+        DEPLOYMENT_PATH = "/opt/fastapi-app"
     }
 
     stages {
@@ -144,6 +150,9 @@ pipeline {
                   # Test health endpoint
                   curl -f http://localhost:8001/health || exit 1
 
+                  # Test root endpoint
+                  curl -f http://localhost:8001/ || exit 1
+
                   # Stop and remove docker container
                   docker rm -f test-container
                 '''
@@ -161,6 +170,76 @@ pipeline {
                     }
                 }
                 echo "✅ Image pushed successfully"
+            }
+        }
+
+        stage("Deploy to Dev") {
+            steps {
+                // Remove old fastapi containers if exists
+                sh '''
+                  docker rm -f fastapi-dev || true 
+
+                  docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                  # Run a new container
+                  docker run -d --name fastapi-dev -p 8100:8000 --restart unless-stopped \
+                  #{DOCKER_IMAGE}:${DOCKER_TAG}
+
+                  # Wait for container to restart
+                  sleep 10
+
+                  # Test the healthcheck
+                  curl -f http://localhost:8100/health || exit 1
+                '''
+                echo "Deployed to Dev Successfully"
+            }
+        }
+
+        stage("Deploy to Staging") {
+            // Remove old containers if exists
+            sh '''
+              docker rm -f fastapi-staging
+
+              docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+              # Run a new container
+              docker run -d --name fastapi-staging -p 8200:8000 --restart unless-stopped \
+              ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+              # Wait for container to start
+              sleep 10
+
+              # Test the healthcheck
+              curl -f http://localhost:8002/health || exit 1
+            '''
+            echo "Deployed to Staging: http://localhost:8200"
+        }
+
+        stage("Approval for Production") {
+            steps {
+                echo "Waiting for manual approval to deploy to Production"
+                input message: "Deploy to Production?", ok: "Deploy"
+            }
+        }
+
+        stage("Deploy to Production") {
+            steps {
+                echo "Deploying to production"
+                sh '''
+                  docker rm -f fastapi-prod || true
+
+                  docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                  docker run -d --name fastapi-prod -p 8000:8000 --restart unless-stopped \
+                  ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                  # Wait for container to start
+                  sleep 10
+
+                  # Healthcheck
+                  curl -f http://localhost:8000/health || exit 1
+                '''
+                echo "Deployed to Production: http://localhost:8000"
             }
         }
 
@@ -190,6 +269,9 @@ pipeline {
                   echo "Git Branch: ${GIT_BRANCH}"
                   echo "Git Commit: ${GIT_COMMIT}"
                   echo "====================="
+                  echo "Dev:   http://${DEPLOY_HOST}:8100"
+                  echo "Stage: http://${DEPLOY_HOST}:8200"
+                  echo "Prod:  http://${DEPLOY_HOST}:8000"
                 '''
             }
         }
@@ -212,6 +294,14 @@ pipeline {
 
         success {
             echo "🎉 Pipeline build successfull. All Tests case passed."
+            echo """ 
+              Deployment Successfull...
+              Access your application:
+              - Dev http://YOUR-EC2-IP/8100/docs
+              - Stage htpp://YOUR-EC2-IP/8200/docs
+              - Prod http://YOUR-EC2-IP/8000/docs
+            """
+
             // emailext(
             //     subject: "Success Job '${env.JOB_NAME}' [${env.BUILD_NUMBER}]'",
             //     body: """
