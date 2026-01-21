@@ -196,6 +196,7 @@ pipeline {
         }
 
         stage("Deploy to Staging") {
+            steps {
             // Remove old containers if exists
             sh '''
               docker rm -f fastapi-staging
@@ -213,6 +214,7 @@ pipeline {
               curl -f http://localhost:8002/health || exit 1
             '''
             echo "Deployed to Staging: http://localhost:8200"
+        }
         }
 
         stage("Approval for Production") {
