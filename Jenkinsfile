@@ -1,6 +1,6 @@
 pipeline {
-    // agent { label "build-agent" }
-    agent any
+    agent { label "build-agent" }
+    // agent any
 
     parameters {
     //     choice(
