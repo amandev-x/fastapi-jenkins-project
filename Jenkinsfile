@@ -211,7 +211,7 @@ pipeline {
               sleep 10
 
               # Test the healthcheck
-              curl -f http://localhost:8002/health || exit 1
+              curl -f http://localhost:8200/health || exit 1
             '''
             echo "Deployed to Staging: http://localhost:8200"
         }
