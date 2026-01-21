@@ -183,7 +183,7 @@ pipeline {
 
                   # Run a new container
                   docker run -d --name fastapi-dev -p 8100:8000 --restart unless-stopped \
-                  #{DOCKER_IMAGE}:${DOCKER_TAG}
+                  ${DOCKER_IMAGE}:${DOCKER_TAG}
 
                   # Wait for container to restart
                   sleep 10
