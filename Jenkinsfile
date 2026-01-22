@@ -266,6 +266,7 @@ pipeline {
                       docker rm -f fastapi-prod-${currentColor} || true
 
                       # Recreate new container on production port
+                      docker rm -f fastapi-prod-${nextColor}
                       docker run -d --name fastapi-prod-${nextColor} -p 8000:8000 \
                       --restart unless-stopped ${DOCKER_IMAGE}:${DOCKER_TAG}
                       
