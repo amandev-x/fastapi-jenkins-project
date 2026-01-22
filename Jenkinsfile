@@ -240,7 +240,7 @@ pipeline {
                     // Deploy to new version
                     sh """
                       # Stop and remove next color if exists
-                      docker rm -f fastapi-prod--${nextColor} || true
+                      docker rm -f fastapi-prod-${nextColor} || true
 
                       # Pull latest image
                       docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
