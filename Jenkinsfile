@@ -224,24 +224,58 @@ pipeline {
             }
         }
 
-        stage("Deploy to Production") {
+        stage("Deploy to Production - Blue/Green") {
             steps {
-                echo "Deploying to production"
-                sh '''
-                  docker rm -f fastapi-prod || true
+                echo "Deploying to Blue/Green Production"
+                script {
+                    // Determine current and next colours
+                    def currentColor = sh (
+                        script: "docker ps --filter 'name=fastapi-prod' --format '{{.Names}}' | grep -o 'blue\\green' || echo 'blue'",
+                        returnStdout: true     
+                    ).trim()
 
-                  docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    def nextColor = (currentColor == "blue")? "green": "blue"
+                    echo "Current color: ${currentColor}, Deploying: ${nextColor}"
 
-                  docker run -d --name fastapi-prod -p 8000:8000 --restart unless-stopped \
-                  ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    // Deploy to new version
+                    sh """
+                      # Stop and remove next color if exists
+                      docker rm -f fastapi-prod--${nextColor} || true
 
-                  # Wait for container to start
-                  sleep 10
+                      # Pull latest image
+                      docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
 
-                  # Healthcheck
-                  curl -f http://localhost:8000/health || exit 1
-                '''
-                echo "Deployed to Production: http://localhost:8000"
+                      # Run new container on standby port
+                      docker run -d --name fastapi-prod-${nextColor} -p 9000:8000 \
+                      --restart unless-stopped ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                      # Wait for container to start
+                      sleep 10
+
+                      # Healthcheck on standby port
+                      curl -f http://localhost:9000/health || exit 1
+                      echo "Healthcheck passed successfull on standy port"
+                    """
+
+                    // Prompt to switch traffic
+                    input message: "Switch traffic from ${currentColor} to ${nextColor}?", ok: "switch"
+
+                    // Switch Traffic
+                    sh """
+                      # Stop current production container
+                      docker rm -f fastapi-prod-${currentColor} || true
+
+                      # Recreate new container on production port
+                      docker run -d --name fastapi-prod-${nextColor} -p 8000:8000 \
+                      --restart unless-stopped ${DOCKER_IMAGE}:${DOCKER_TAG}
+                      
+                      # Final health check
+                      sleep 5
+                      curl -f http://localhost:8000/health || exit 1
+                      echo "Traffic switched to ${nextColor}"
+                      echo "Current color is now standby. Can be used to rollback."
+                    """
+                }
             }
         }
 
