@@ -1,6 +1,7 @@
+@Library("jenkins-shared-library") _
 pipeline {
-    // agent { label "build-agent" }
-    agent any
+    agent { label "build-agent" }
+    // agent any
 
     parameters {
     //     choice(
@@ -29,6 +30,7 @@ pipeline {
         DOCKER_IMAGE = "amandabral9954/fastapi-todo"
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials("dockerhub-credentials")
+        REGISTRY = "https://registry.hub.docker.com"
 
         // Deployment Settings
         DEPLOYMENT_HOST = "localhost"
@@ -91,87 +93,110 @@ pipeline {
             }
         }
 
-        stage("Code Quality and Test") {
-            parallel {
-                stage("Linting") {
-                    // when {
-                    //     expression { params.RUN_LINTING == "yes"}
-                    //     }
-                    steps {
-                        echo "Running code quality checks..."
-
-                        sh '''
-                          . ${VENV_DIR}/bin/activate
-                          echo "Running flake8..."
-                          flake8 --max-line-length 100 app/ --exit-zero || true
-
-                          echo "Running Black..."
-                          black --check app/ tests/ || true
-                          '''
-                        echo "Linting complete."
-                    }
-                }
-
-                stage("Unit Testing") {
-                    // when {
-                    //     expression { params.RUN_TESTS }
-                    //     }
-                    steps {
-                        echo "Running Unit Tests..."
-                        sh '''
-                          . ${VENV_DIR}/bin/activate
-                          pytest --junitxml=test-result.xml --cov-fail-under=${COVERAGE_THRESHOLD}
-                          '''
-                        echo "Test passed."
-                    }
-                }
-            }
-        }
-
-        stage("Build Docker Image") {
+        // Using shared library
+        stage("setup") {
             steps {
-                echo "🐳 Building Docker image..."
+                echo "Running tests"
                 script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    docker.build("${DOCKER_IMAGE}:latest")
+                    runTests(
+                        coverageThreshold: 80,
+                        testPath: "tests"
+                    )
                 }
-                echo "✅ Docker image build successfully..."
             }
         }
+        // stage("Code Quality and Test") {
+        //     parallel {
+        //         stage("Linting") {
+        //             // when {
+        //             //     expression { params.RUN_LINTING == "yes"}
+        //             //     }
+        //             steps {
+        //                 echo "Running code quality checks..."
 
-        stage("Test Docker Image") {
+        //                 sh '''
+        //                   . ${VENV_DIR}/bin/activate
+        //                   echo "Running flake8..."
+        //                   flake8 --max-line-length 100 app/ --exit-zero || true
+
+        //                   echo "Running Black..."
+        //                   black --check app/ tests/ || true
+        //                   '''
+        //                 echo "Linting complete."
+        //             }
+        //         }
+
+        //         stage("Unit Testing") {
+        //             // when {
+        //             //     expression { params.RUN_TESTS }
+        //             //     }
+        //             steps {
+        //                 echo "Running Unit Tests..."
+        //                 sh '''
+        //                   . ${VENV_DIR}/bin/activate
+        //                   pytest --junitxml=test-result.xml --cov-fail-under=${COVERAGE_THRESHOLD}
+        //                   '''
+        //                 echo "Test passed."
+        //             }
+        //         }
+        //     }
+        // }
+
+        // Using shared library
+        stage("Build and push image") {
             steps {
-                echo "Running docker image..."
-                sh '''
-                  docker run -d --name test-container -p 8001:8000 ${DOCKER_IMAGE}:${DOCKER_TAG}
-
-                  sleep 5
-
-                  # Test health endpoint
-                  curl -f http://localhost:8001/health || exit 1
-
-                  # Test root endpoint
-                  curl -f http://localhost:8001/ || exit 1
-
-                  # Stop and remove docker container
-                  docker rm -f test-container
-                '''
-                echo "✅ Docker image test passed..."
+                dockerBuildAndPush(
+                    imageName: env.DOCKER_IMAGE
+                    tag: env.DOCKER_TAG
+                    registry: env.REGISTRY
+                    credentialsId: "dockerhub-credentials"
+                )
             }
         }
+        // stage("Build Docker Image") {
+        //     steps {
+        //         echo "🐳 Building Docker image..."
+        //         script {
+        //             docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+        //             docker.build("${DOCKER_IMAGE}:latest")
+        //         }
+        //         echo "✅ Docker image build successfully..."
+        //     }
+        // }
 
-        stage("Push to Dockerhub") {
-            steps {
-                echo "Pushing to dockerhub"
-                script {
-                    docker.withRegistry("https://registry.hub.docker.com", "dockerhub-credentials") {
-                      docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
-                      docker.image("${DOCKER_IMAGE}:latest").push()
-                    }
-                }
-                echo "✅ Image pushed successfully"
-            }
-        }
+        // stage("Test Docker Image") {
+        //     steps {
+        //         echo "Running docker image..."
+        //         sh '''
+        //           docker run -d --name test-container -p 8001:8000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+        //           sleep 5
+
+        //           # Test health endpoint
+        //           curl -f http://localhost:8001/health || exit 1
+
+        //           # Test root endpoint
+        //           curl -f http://localhost:8001/ || exit 1
+
+        //           # Stop and remove docker container
+        //           docker rm -f test-container
+        //         '''
+        //         echo "✅ Docker image test passed..."
+        //     }
+        // }
+
+        // stage("Push to Dockerhub") {
+        //     steps {
+        //         echo "Pushing to dockerhub"
+        //         script {
+        //             docker.withRegistry("https://registry.hub.docker.com", "dockerhub-credentials") {
+        //               docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+        //               docker.image("${DOCKER_IMAGE}:latest").push()
+        //             }
+        //         }
+        //         echo "✅ Image pushed successfully"
+        //     }
+        // }
 
         stage("Deploy to Dev") {
             steps {
