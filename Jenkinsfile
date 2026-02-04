@@ -146,9 +146,9 @@ pipeline {
         stage("Build and push image") {
             steps {
                 dockerBuildAndPush(
-                    imageName: env.DOCKER_IMAGE
-                    tag: env.DOCKER_TAG
-                    registry: env.REGISTRY
+                    imageName: env.DOCKER_IMAGE,
+                    tag: env.DOCKER_TAG,
+                    registry: env.REGISTRY,
                     credentialsId: "dockerhub-credentials"
                 )
             }
